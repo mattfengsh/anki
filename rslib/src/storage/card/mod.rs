@@ -745,7 +745,7 @@ impl fmt::Display for ReviewOrderSubclause {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let temp_string;
         let clause = match self {
-            ReviewOrderSubclause::Day => "due",
+            ReviewOrderSubclause::Day => "due, ord",
             ReviewOrderSubclause::Deck => "(select rowid from active_decks ad where ad.id = did)",
             ReviewOrderSubclause::Random => "fnvhash(id, mod)",
             ReviewOrderSubclause::IntervalsAscending => "ivl asc",
