@@ -36,7 +36,7 @@ from anki.hooks import runFilter
 from anki.httpclient import HttpClient
 from anki.models import NotetypeId, StockNotetype
 from anki.notes import Note, NoteFieldsCheckResult, NoteId
-from anki.utils import checksum, is_lin, is_win, namedtmp
+from anki.utils import checksum, is_lin, is_mac, is_win, namedtmp
 from aqt import AnkiQt, colors, gui_hooks
 from aqt.operations import QueryOp
 from aqt.operations.note import update_note
@@ -49,11 +49,13 @@ from aqt.utils import (
     KeyboardModifiersPressed,
     disable_help_button,
     getFile,
+    openFolder,
     openHelp,
     qtMenuShortcutWorkaround,
     restoreGeom,
     saveGeom,
     shortcut,
+    show_in_folder,
     showInfo,
     showWarning,
     tooltip,
@@ -1124,7 +1126,7 @@ require("anki/ui").loaded.then(() => require("anki/NoteEditor").instances[0].too
         self.web.eval("resetIOImageLoaded()")
 
     def update_occlusions_field(self) -> None:
-        self.web.eval("updateOcclusionsField()")
+        self.web.eval("saveOcclusions()")
 
     def _setup_mask_editor(self, io_options: dict):
         self.web.eval(
@@ -1585,28 +1587,37 @@ class EditorWebView(AnkiWebView):
 
     def contextMenuEvent(self, evt: QContextMenuEvent) -> None:
         m = QMenu(self)
-        self._maybe_add_cut_action(m)
-        self._maybe_add_copy_action(m)
+        if self.hasSelection():
+            self._add_cut_action(m)
+            self._add_copy_action(m)
         a = m.addAction(tr.editing_paste())
         qconnect(a.triggered, self.onPaste)
-        self._maybe_add_copy_image_action(m)
+        if self._opened_context_menu_on_image():
+            self._add_image_menu(m)
         gui_hooks.editor_will_show_context_menu(self, m)
         m.popup(QCursor.pos())
 
-    def _maybe_add_cut_action(self, menu: QMenu) -> None:
-        if self.hasSelection():
-            a = menu.addAction(tr.editing_cut())
-            qconnect(a.triggered, self.onCut)
+    def _add_cut_action(self, menu: QMenu) -> None:
+        a = menu.addAction(tr.editing_cut())
+        qconnect(a.triggered, self.onCut)
 
-    def _maybe_add_copy_action(self, menu: QMenu) -> None:
-        if self.hasSelection():
-            a = menu.addAction(tr.actions_copy())
-            qconnect(a.triggered, self.onCopy)
+    def _add_copy_action(self, menu: QMenu) -> None:
+        a = menu.addAction(tr.actions_copy())
+        qconnect(a.triggered, self.onCopy)
 
-    def _maybe_add_copy_image_action(self, menu: QMenu) -> None:
-        if self._opened_context_menu_on_image():
-            a = menu.addAction(tr.editing_copy_image())
-            qconnect(a.triggered, self.on_copy_image)
+    def _add_image_menu(self, menu: QMenu) -> None:
+        a = menu.addAction(tr.editing_copy_image())
+        qconnect(a.triggered, self.on_copy_image)
+
+        url = self.lastContextMenuRequest().mediaUrl()
+        file_name = url.fileName()
+        path = os.path.join(self.editor.mw.col.media.dir(), file_name)
+        a = menu.addAction(tr.editing_open_image())
+        qconnect(a.triggered, lambda: openFolder(path))
+
+        if is_win or is_mac:
+            a = menu.addAction(tr.editing_show_in_folder())
+            qconnect(a.triggered, lambda: show_in_folder(path))
 
 
 # QFont returns "Kozuka Gothic Pro L" but WebEngine expects "Kozuka Gothic Pro Light"
