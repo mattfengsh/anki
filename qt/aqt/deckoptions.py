@@ -14,6 +14,7 @@ from aqt.qt import *
 from aqt.utils import (
     KeyboardModifiersPressed,
     addCloseShortcut,
+    ask_user_dialog,
     disable_help_button,
     restoreGeom,
     saveGeom,
@@ -32,6 +33,8 @@ class DeckOptionsDialog(QDialog):
         QDialog.__init__(self, mw, Qt.WindowType.Window)
         self.mw = mw
         self._deck = deck
+        self._close_event_has_cleaned_up = False
+        self._ready = False
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -57,7 +60,40 @@ class DeckOptionsDialog(QDialog):
 
     def _on_bridge_cmd(self, cmd: str) -> None:
         if cmd == "deckOptionsReady":
+            self._ready = True
             gui_hooks.deck_options_did_load(self)
+        elif cmd == "confirmDiscardChanges":
+            self.confirm_discard_changes()
+        elif cmd == "_close":
+            self._close()
+
+    def closeEvent(self, evt: QCloseEvent) -> None:
+        if self._close_event_has_cleaned_up:
+            evt.accept()
+            return
+        evt.ignore()
+        self.check_pending_changes()
+
+    def _close(self):
+        """Close. Ensure the closeEvent is not ignored."""
+        self._close_event_has_cleaned_up = True
+        self.close()
+
+    def confirm_discard_changes(self) -> None:
+        def callbackWithUserChoice(choice: int) -> None:
+            if choice == 0:
+                # The user accepted to discard current input.
+                self._close()
+
+        ask_user_dialog(
+            tr.card_templates_discard_changes(),
+            callback=callbackWithUserChoice,
+            buttons=[
+                QMessageBox.StandardButton.Discard,
+                (tr.adding_keep_editing(), QMessageBox.ButtonRole.RejectRole),
+            ],
+            parent=self,
+        )
 
     def reject(self) -> None:
         self.mw.col.set_wants_abort()
@@ -65,6 +101,12 @@ class DeckOptionsDialog(QDialog):
         self.web = None
         saveGeom(self, self.TITLE)
         QDialog.reject(self)
+
+    def check_pending_changes(self):
+        if self._ready:
+            self.web.eval("anki.deckOptionsPendingChanges();")
+        else:
+            self._close()
 
 
 def confirm_deck_then_display_options(active_card: Card | None = None) -> None:

@@ -95,7 +95,7 @@ from aqt.main import AnkiQt  # isort:skip
 from aqt.profiles import ProfileManager, VideoDriver  # isort:skip
 
 profiler: cProfile.Profile | None = None
-mw: AnkiQt | None = None  # set on init
+mw: AnkiQt = None  # set on init
 
 import aqt.forms
 
@@ -667,7 +667,7 @@ def _run(argv: list[str] | None = None, exec: bool = True) -> AnkiApp | None:
 
     # create the app
     QCoreApplication.setApplicationName("Anki")
-    QGuiApplication.setDesktopFileName("anki.desktop")
+    QGuiApplication.setDesktopFileName("anki")
     app = AnkiApp(argv)
     if app.secondInstance():
         # we've signaled the primary instance, so we should close
