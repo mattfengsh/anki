@@ -752,7 +752,7 @@ impl fmt::Display for ReviewOrderSubclause {
             ReviewOrderSubclause::IntervalsDescending => "ivl desc",
             ReviewOrderSubclause::EaseAscending => "factor asc",
             ReviewOrderSubclause::EaseDescending => "factor desc",
-            ReviewOrderSubclause::DifficultyAscending => "extract_fsrs_variable(data, 'd') asc",
+            ReviewOrderSubclause::DifficultyAscending => "extract_fsrs_variable(data, 'd') asc, ord",
             ReviewOrderSubclause::DifficultyDescending => "extract_fsrs_variable(data, 'd') desc",
             ReviewOrderSubclause::RelativeOverdueness { today } => {
                 temp_string = format!("ivl / cast({today}-due+0.001 as real)", today = today);
