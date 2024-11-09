@@ -69,7 +69,7 @@ pub fn build_bundle(build: &mut Build) -> Result<()> {
         build_dist_folder(build, DistKind::Alternate)?;
     }
 
-    build_packages(build)?;
+    // build_packages(build)?;
 
     Ok(())
 }
