@@ -148,14 +148,19 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                         ignoreRevlogsBeforeMs: getIgnoreRevlogsBeforeMs(),
                         currentParams: params,
                     });
-                    if (
+
+                    const already_optimal =
                         (params.length &&
                             params.every(
                                 (n, i) => n.toFixed(4) === resp.params[i].toFixed(4),
                             )) ||
-                        resp.params.length === 0
-                    ) {
-                        setTimeout(() => alert(tr.deckConfigFsrsParamsOptimal()), 200);
+                        resp.params.length === 0;
+
+                    if (already_optimal) {
+                        const msg = resp.fsrsItems
+                            ? tr.deckConfigFsrsParamsOptimal()
+                            : tr.deckConfigFsrsParamsNoReviews();
+                        setTimeout(() => alert(msg), 200);
                     } else {
                         $config.fsrsParams5 = resp.params;
                     }
@@ -288,8 +293,8 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
     let tableData: TableDatum[] = [] as any;
     const bounds = defaultGraphBounds();
+    bounds.marginLeft += 8;
     let svg = null as HTMLElement | SVGElement | null;
-    const title = tr.statisticsReviewsTitle();
     let simulationNumber = 0;
 
     let points: Point[] = [];
@@ -478,13 +483,16 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                 />
             {/if}
         {/if}
-        <div>{computeRetentionProgressString}</div>
+
+        {#if computingRetention}
+            <div>{computeRetentionProgressString}</div>
+        {/if}
     </details>
 </div>
 
 <div class="m-2">
     <details>
-        <summary>FSRS simulator (experimental)</summary>
+        <summary>{tr.deckConfigFsrsSimulatorExperimental()}</summary>
 
         <SpinBoxRow
             bind:value={simulateFsrsRequest.daysToSimulate}
@@ -504,7 +512,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             max={100000}
         >
             <SettingTitle on:click={() => openHelpModal("simulateFsrsReview")}>
-                Additional new cards to simulate
+                {tr.deckConfigAdditionalNewCardsToSimulate()}
             </SettingTitle>
         </SpinBoxRow>
 
@@ -546,7 +554,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             disabled={computing}
             on:click={() => simulateFsrs()}
         >
-            {"Simulate"}
+            {tr.deckConfigSimulate()}
         </button>
 
         <button
@@ -554,11 +562,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             disabled={computing}
             on:click={() => clearSimulation()}
         >
-            {"Clear last simulation"}
+            {tr.deckConfigClearLastSimulate()}
         </button>
         <div>{simulateProgressString}</div>
 
-        <Graph {title}>
+        <Graph>
             <InputBox>
                 <label>
                     <input type="checkbox" bind:checked={showTime} />

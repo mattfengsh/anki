@@ -8,7 +8,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     import Graph from "../graphs/Graph.svelte";
     import NoDataOverlay from "../graphs/NoDataOverlay.svelte";
     import AxisTicks from "../graphs/AxisTicks.svelte";
-    import { writable } from "svelte/store";
+    import { writable, type Writable } from "svelte/store";
     import InputBox from "../graphs/InputBox.svelte";
     import {
         renderForgettingCurve,
@@ -20,22 +20,36 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     import HoverColumns from "../graphs/HoverColumns.svelte";
 
     export let revlog: RevlogEntry[];
+    export let desiredRetention: number;
     let svg = null as HTMLElement | SVGElement | null;
     const bounds = defaultGraphBounds();
     const title = tr.cardStatsFsrsForgettingCurveTitle();
-    const filteredRevlog = filterRevlog(revlog);
-    const maxDays = calculateMaxDays(filteredRevlog, TimeRange.AllTime);
+
+    $: filteredRevlog = filterRevlog(revlog);
+    $: maxDays = calculateMaxDays(filteredRevlog, TimeRange.AllTime);
+
     let defaultTimeRange = TimeRange.Week;
-    if (maxDays > 365) {
+    const timeRange: Writable<TimeRange> = writable(defaultTimeRange);
+
+    // https://github.com/sveltejs/svelte/issues/13811
+    // svelte-ignore reactive_declaration_non_reactive_property
+    $: if (maxDays > 365) {
         defaultTimeRange = TimeRange.AllTime;
     } else if (maxDays > 30) {
         defaultTimeRange = TimeRange.Year;
     } else if (maxDays > 7) {
         defaultTimeRange = TimeRange.Month;
     }
-    const timeRange = writable(defaultTimeRange);
 
-    $: renderForgettingCurve(filteredRevlog, $timeRange, svg as SVGElement, bounds);
+    $: $timeRange = defaultTimeRange;
+
+    $: renderForgettingCurve(
+        filteredRevlog,
+        $timeRange,
+        svg as SVGElement,
+        bounds,
+        desiredRetention,
+    );
 </script>
 
 <div class="forgetting-curve">
