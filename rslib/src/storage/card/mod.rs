@@ -771,7 +771,7 @@ impl fmt::Display for ReviewOrderSubclause {
             ReviewOrderSubclause::IntervalsDescending => "ivl desc",
             ReviewOrderSubclause::EaseAscending => "factor asc",
             ReviewOrderSubclause::EaseDescending => "factor desc",
-            ReviewOrderSubclause::DifficultyAscending => "extract_fsrs_variable(data, 'd') asc",
+            ReviewOrderSubclause::DifficultyAscending => "extract_fsrs_variable(data, 'd') asc, ord",
             ReviewOrderSubclause::DifficultyDescending => "extract_fsrs_variable(data, 'd') desc",
             ReviewOrderSubclause::RetrievabilitySm2 { today, order } => {
                 temp_string = format!(
@@ -784,7 +784,7 @@ impl fmt::Display for ReviewOrderSubclause {
                 let today = timing.days_elapsed;
                 let next_day_at = timing.next_day_at.0;
                 temp_string =
-                    format!("extract_fsrs_relative_retrievability(data, case when odue !=0 then odue else due end, {today}, ivl, {next_day_at}) {order}");
+                    format!("extract_fsrs_relative_retrievability(data, case when odue !=0 then odue else due end, {today}, ivl, {next_day_at}) {order}, ord");
                 &temp_string
             }
             ReviewOrderSubclause::Added => "nid asc, ord asc",
