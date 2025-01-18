@@ -364,10 +364,11 @@ impl super::SqliteStorage {
         usn: Usn,
         v1_sched: bool,
     ) -> Result<(usize, usize)> {
-        let new_cnt = self
-            .db
-            .prepare(include_str!("fix_due_new.sql"))?
-            .execute(params![mtime, usn])?;
+        let new_cnt = 0;
+        // let new_cnt = self
+        //     .db
+        //     .prepare(include_str!("fix_due_new.sql"))?
+        //     .execute(params![mtime, usn])?;
         let mut other_cnt = self
             .db
             .prepare(include_str!("fix_due_other.sql"))?
