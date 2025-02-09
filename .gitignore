@@ -17,5 +17,4 @@ node_modules
 /extra
 yarn-error.log
 ts/.svelte-kit
-/black
-/black
+.yarn
