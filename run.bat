@@ -11,6 +11,6 @@ set ANKI_API_HOST=127.0.0.1
 set RUST_BACKTRACE=1
 set TRACESQL=1
 
-call tools\ninja pylib qt extract:win_amd64_audio || exit /b 1
+call tools\ninja pylib qt || exit /b 1
 .\out\pyenv\scripts\python tools\run.py %* || exit /b 1
 popd
