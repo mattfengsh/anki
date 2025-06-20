@@ -31,12 +31,12 @@ fn main() -> Result<()> {
     extract_nsis_plugins()?;
     copy_files(&output_dir)?;
     sign_binaries(&output_dir)?;
-    copy_nsis_files(&nsis_dir)?;
-    build_uninstaller(&output_dir, &nsis_dir)?;
-    sign_file(&output_dir.join("uninstall.exe"))?;
-    generate_install_manifest(&output_dir)?;
-    build_installer(&output_dir, &nsis_dir)?;
-    sign_file(&PathBuf::from("../../../out/launcher_exe/anki-install.exe"))?;
+    // copy_nsis_files(&nsis_dir)?;
+    // build_uninstaller(&output_dir, &nsis_dir)?;
+    // sign_file(&output_dir.join("uninstall.exe"))?;
+    // generate_install_manifest(&output_dir)?;
+    // build_installer(&output_dir, &nsis_dir)?;
+    // sign_file(&PathBuf::from("../../../out/launcher_exe/anki-install.exe"))?;
 
     println!("Build completed successfully!");
     println!("Output directory: {}", output_dir.display());
