@@ -1,21 +1,28 @@
 // Copyright: Ankitects Pty Ltd and contributors
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-use std::ffi::OsStr;
 use std::io::stdin;
-use std::os::windows::ffi::OsStrExt;
 use std::process::Command;
 
 use anyhow::Context;
 use anyhow::Result;
-use winapi::shared::minwindef::HKEY;
-use winapi::um::wincon;
-use winapi::um::winnt::KEY_READ;
-use winapi::um::winreg;
+use widestring::u16cstr;
+use windows::core::PCWSTR;
+use windows::Win32::System::Console::AttachConsole;
+use windows::Win32::System::Console::GetConsoleWindow;
+use windows::Win32::System::Console::ATTACH_PARENT_PROCESS;
+use windows::Win32::System::Registry::RegCloseKey;
+use windows::Win32::System::Registry::RegOpenKeyExW;
+use windows::Win32::System::Registry::RegQueryValueExW;
+use windows::Win32::System::Registry::HKEY;
+use windows::Win32::System::Registry::HKEY_CURRENT_USER;
+use windows::Win32::System::Registry::KEY_READ;
+use windows::Win32::System::Registry::REG_SZ;
+use windows::Win32::UI::Shell::SetCurrentProcessExplicitAppUserModelID;
 
 pub fn ensure_terminal_shown() -> Result<()> {
     unsafe {
-        if !wincon::GetConsoleWindow().is_null() {
+        if !GetConsoleWindow().is_invalid() {
             // We already have a console, no need to spawn anki-console.exe
             return Ok(());
         }
@@ -51,12 +58,12 @@ pub fn ensure_terminal_shown() -> Result<()> {
 
 pub fn attach_to_parent_console() -> bool {
     unsafe {
-        if !wincon::GetConsoleWindow().is_null() {
+        if !GetConsoleWindow().is_invalid() {
             // we have a console already
             return false;
         }
 
-        if wincon::AttachConsole(wincon::ATTACH_PARENT_PROCESS) != 0 {
+        if AttachConsole(ATTACH_PARENT_PROCESS).is_ok() {
             // successfully attached to parent
             reconnect_stdio_to_console();
             true
@@ -136,65 +143,59 @@ fn get_uninstaller_path() -> Option<std::path::PathBuf> {
 
 fn read_registry_install_dir() -> Option<std::path::PathBuf> {
     unsafe {
-        let mut hkey: HKEY = std::ptr::null_mut();
+        let mut hkey = HKEY::default();
 
         // Convert the registry path to wide string
-        let subkey: Vec<u16> = OsStr::new("SOFTWARE\\Anki")
-            .encode_wide()
-            .chain(std::iter::once(0))
-            .collect();
+        let subkey = u16cstr!("SOFTWARE\\Anki");
 
         // Open the registry key
-        let result = winreg::RegOpenKeyExW(
-            winreg::HKEY_CURRENT_USER,
-            subkey.as_ptr(),
-            0,
+        let result = RegOpenKeyExW(
+            HKEY_CURRENT_USER,
+            PCWSTR(subkey.as_ptr()),
+            Some(0),
             KEY_READ,
             &mut hkey,
         );
 
-        if result != 0 {
+        if result.is_err() {
             return None;
         }
 
         // Query the Install_Dir64 value
-        let value_name: Vec<u16> = OsStr::new("Install_Dir64")
-            .encode_wide()
-            .chain(std::iter::once(0))
-            .collect();
+        let value_name = u16cstr!("Install_Dir64");
 
-        let mut value_type = 0u32;
+        let mut value_type = REG_SZ;
         let mut data_size = 0u32;
 
         // First call to get the size
-        let result = winreg::RegQueryValueExW(
+        let result = RegQueryValueExW(
             hkey,
-            value_name.as_ptr(),
-            std::ptr::null_mut(),
-            &mut value_type,
-            std::ptr::null_mut(),
-            &mut data_size,
+            PCWSTR(value_name.as_ptr()),
+            None,
+            Some(&mut value_type),
+            None,
+            Some(&mut data_size),
         );
 
-        if result != 0 || data_size == 0 {
-            winreg::RegCloseKey(hkey);
+        if result.is_err() || data_size == 0 {
+            let _ = RegCloseKey(hkey);
             return None;
         }
 
         // Allocate buffer and read the value
         let mut buffer: Vec<u16> = vec![0; (data_size / 2) as usize];
-        let result = winreg::RegQueryValueExW(
+        let result = RegQueryValueExW(
             hkey,
-            value_name.as_ptr(),
-            std::ptr::null_mut(),
-            &mut value_type,
-            buffer.as_mut_ptr() as *mut u8,
-            &mut data_size,
+            PCWSTR(value_name.as_ptr()),
+            None,
+            Some(&mut value_type),
+            Some(buffer.as_mut_ptr() as *mut u8),
+            Some(&mut data_size),
         );
 
-        winreg::RegCloseKey(hkey);
+        let _ = RegCloseKey(hkey);
 
-        if result == 0 {
+        if result.is_ok() {
             // Convert wide string back to PathBuf
             let len = buffer.iter().position(|&x| x == 0).unwrap_or(buffer.len());
             let path_str = String::from_utf16_lossy(&buffer[..len]);
@@ -203,4 +204,14 @@ fn read_registry_install_dir() -> Option<std::path::PathBuf> {
             None
         }
     }
+}
+
+pub fn prepare_to_launch_normally() {
+    // Set the App User Model ID for Windows taskbar grouping
+    unsafe {
+        let _ =
+            SetCurrentProcessExplicitAppUserModelID(PCWSTR(u16cstr!("Ankitects.Anki").as_ptr()));
+    }
+
+    attach_to_parent_console();
 }
