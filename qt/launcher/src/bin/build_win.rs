@@ -88,7 +88,7 @@ fn build_launcher_binary() -> Result<()> {
 
 // fn extract_nsis_plugins() -> Result<()> {
 //     println!("Extracting NSIS plugins...");
-// 
+//
 //     // Change to the anki root directory and run tools/ninja.bat
 //     Command::new("cmd")
 //         .args([
@@ -101,7 +101,7 @@ fn build_launcher_binary() -> Result<()> {
 //             "extract:nsis_plugins",
 //         ])
 //         .ensure_success()?;
-// 
+//
 //     Ok(())
 // }
 
@@ -157,10 +157,10 @@ fn copy_files(output_dir: &Path) -> Result<()> {
 //         );
 //         return Ok(());
 //     }
-// 
+//
 //     let signtool_path = find_signtool()?;
 //     println!("Signing {}...", file_path.display());
-// 
+//
 //     Command::new(&signtool_path)
 //         .args([
 //             "sign",
@@ -176,13 +176,13 @@ fn copy_files(output_dir: &Path) -> Result<()> {
 //         ])
 //         .arg(file_path)
 //         .ensure_success()?;
-// 
+//
 //     Ok(())
 // }
-// 
+//
 // fn find_signtool() -> Result<PathBuf> {
 //     println!("Locating signtool.exe...");
-// 
+//
 //     let output = Command::new("where")
 //         .args([
 //             "/r",
@@ -190,7 +190,7 @@ fn copy_files(output_dir: &Path) -> Result<()> {
 //             "signtool.exe",
 //         ])
 //         .utf8_output()?;
-// 
+//
 //     // Find signtool.exe with "arm64" in the path (as per original batch logic)
 //     for line in output.stdout.lines() {
 //         if line.contains("\\x64\\") {
@@ -199,16 +199,16 @@ fn copy_files(output_dir: &Path) -> Result<()> {
 //             return Ok(signtool_path);
 //         }
 //     }
-// 
+//
 //     anyhow::bail!("Could not find signtool.exe with arm64 architecture");
 // }
 
 // fn generate_install_manifest(output_dir: &Path) -> Result<()> {
 //     println!("Generating install manifest...");
-// 
+//
 //     let mut manifest_content = String::new();
 //     let entries = anki_io::read_dir_files(output_dir)?;
-// 
+//
 //     for entry in entries {
 //         let entry = entry?;
 //         let path = entry.path();
@@ -225,77 +225,77 @@ fn copy_files(output_dir: &Path) -> Result<()> {
 //             }
 //         }
 //     }
-// 
+//
 //     write_file(output_dir.join("anki.install-manifest"), manifest_content)?;
-// 
+//
 //     Ok(())
 // }
 
 // fn copy_nsis_files(nsis_dir: &Path) -> Result<()> {
 //     println!("Copying NSIS support files...");
-// 
+//
 //     // Copy anki.template.nsi as anki.nsi
 //     copy_file("anki.template.nsi", nsis_dir.join("anki.nsi"))?;
-// 
+//
 //     // Copy fileassoc.nsh
 //     copy_file("fileassoc.nsh", nsis_dir.join("fileassoc.nsh"))?;
-// 
+//
 //     // Copy nsProcess.dll
 //     copy_file(
 //         "../../../out/extracted/nsis_plugins/nsProcess.dll",
 //         nsis_dir.join("nsProcess.dll"),
 //     )?;
-// 
+//
 //     Ok(())
 // }
 
 // fn build_uninstaller(output_dir: &Path, nsis_dir: &Path) -> Result<()> {
 //     println!("Building uninstaller...");
-// 
+//
 //     let mut flags = vec!["-V3", "-DWRITE_UNINSTALLER"];
 //     if env::var("NO_COMPRESS").unwrap_or_default() == "1" {
 //         println!("NO_COMPRESS=1 detected, disabling compression");
 //         flags.push("-DNO_COMPRESS");
 //     }
-// 
+//
 //     run_nsis(
 //         &PathBuf::from("anki.nsi"),
 //         &flags,
 //         nsis_dir, // Run from nsis directory
 //     )?;
-// 
+//
 //     // Copy uninstaller from nsis directory to output directory
 //     copy_file(
 //         nsis_dir.join("uninstall.exe"),
 //         output_dir.join("uninstall.exe"),
 //     )?;
-// 
+//
 //     Ok(())
 // }
-// 
+//
 // fn build_installer(_output_dir: &Path, nsis_dir: &Path) -> Result<()> {
 //     println!("Building installer...");
-// 
+//
 //     let mut flags = vec!["-V3"];
 //     if env::var("NO_COMPRESS").unwrap_or_default() == "1" {
 //         println!("NO_COMPRESS=1 detected, disabling compression");
 //         flags.push("-DNO_COMPRESS");
 //     }
-// 
+//
 //     run_nsis(
 //         &PathBuf::from("anki.nsi"),
 //         &flags,
 //         nsis_dir, // Run from nsis directory
 //     )?;
-// 
+//
 //     Ok(())
 // }
-// 
+//
 // fn run_nsis(script_path: &Path, flags: &[&str], working_dir: &Path) -> Result<()> {
 //     let mut cmd = Command::new(NSIS_PATH);
 //     cmd.args(flags).arg(script_path).current_dir(working_dir);
-// 
+//
 //     cmd.ensure_success()?;
-// 
+//
 //     Ok(())
 // }
