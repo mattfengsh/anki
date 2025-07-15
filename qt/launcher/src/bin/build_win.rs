@@ -22,6 +22,11 @@ const CARGO_TARGET_DIR: &str = "../../../out/rust";
 fn main() -> Result<()> {
     println!("Building Windows launcher...");
 
+    // Read version early so it can be used throughout the build process
+    let version = std::fs::read_to_string("../../../.version")?
+        .trim()
+        .to_string();
+
     let output_dir = PathBuf::from(OUTPUT_DIR);
     let launcher_exe_dir = PathBuf::from(LAUNCHER_EXE_DIR);
     let nsis_dir = PathBuf::from(NSIS_DIR);
@@ -31,16 +36,20 @@ fn main() -> Result<()> {
     // extract_nsis_plugins()?;
     copy_files(&output_dir)?;
     // sign_binaries(&output_dir)?;
-    // copy_nsis_files(&nsis_dir)?;
+    // copy_nsis_files(&nsis_dir, &version)?;
     // build_uninstaller(&output_dir, &nsis_dir)?;
     // sign_file(&output_dir.join("uninstall.exe"))?;
     // generate_install_manifest(&output_dir)?;
     // build_installer(&output_dir, &nsis_dir)?;
-    // sign_file(&PathBuf::from("../../../out/launcher_exe/anki-install.exe"))?;
+
+    let installer_filename = format!("anki-launcher-{version}-windows.exe");
+    // let installer_path = PathBuf::from("../../../out/launcher_exe").join(&installer_filename);
+
+    // sign_file(&installer_path)?;
 
     println!("Build completed successfully!");
     println!("Output directory: {}", output_dir.display());
-    println!("Installer: ../../../out/launcher_exe/anki-install.exe");
+    println!("Installer: ../../../out/launcher_exe/{installer_filename}");
 
     Ok(())
 }
