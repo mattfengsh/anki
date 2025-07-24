@@ -275,9 +275,27 @@ fn handle_version_install_or_update(state: &State, choice: MainMenuChoice) -> Re
         }
     }
 
+    // remove CONDA_PREFIX/bin from PATH to avoid conda interference
+    #[cfg(target_os = "macos")]
+    if let Ok(conda_prefix) = std::env::var("CONDA_PREFIX") {
+        if let Ok(current_path) = std::env::var("PATH") {
+            let conda_bin = format!("{conda_prefix}/bin");
+            let filtered_paths: Vec<&str> = current_path
+                .split(':')
+                .filter(|&path| path != conda_bin)
+                .collect();
+            let new_path = filtered_paths.join(":");
+            command.env("PATH", new_path);
+        }
+    }
+
     command
         .env("UV_CACHE_DIR", &state.uv_cache_dir)
         .env("UV_PYTHON_INSTALL_DIR", &state.uv_python_install_dir)
+        .env(
+            "UV_HTTP_TIMEOUT",
+            std::env::var("UV_HTTP_TIMEOUT").unwrap_or_else(|_| "180".to_string()),
+        )
         .args(["sync", "--upgrade", "--managed-python", "--no-config"]);
 
     // Add python version if .python-version file exists
@@ -364,9 +382,7 @@ fn main_menu_loop(state: &State) -> Result<()> {
                 continue;
             }
             choice @ (MainMenuChoice::Latest | MainMenuChoice::Version(_)) => {
-                if handle_version_install_or_update(state, choice.clone()).is_err() {
-                    continue;
-                }
+                handle_version_install_or_update(state, choice.clone())?;
                 break;
             }
         }
@@ -633,10 +649,17 @@ fn fetch_versions(state: &State) -> Result<Vec<String>> {
 
     let mut cmd = Command::new(&state.uv_path);
     cmd.current_dir(&state.uv_install_root)
-        .args(["run", "--no-project"])
+        .args(["run", "--no-project", "--no-config", "--managed-python"])
+        .args(["--with", "pip-system-certs"])
         .arg(&versions_script);
 
-    let output = cmd.utf8_output()?;
+    let output = match cmd.utf8_output() {
+        Ok(output) => output,
+        Err(e) => {
+            print!("Unable to check for Anki versions. Please check your internet connection.\n\n");
+            return Err(e.into());
+        }
+    };
     let versions = serde_json::from_str(&output.stdout).context("Failed to parse versions JSON")?;
     Ok(versions)
 }
