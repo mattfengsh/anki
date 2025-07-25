@@ -11,7 +11,6 @@ use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
 use anki_io::copy_file;
-use anki_io::copy_if_newer;
 use anki_io::create_dir_all;
 use anki_io::modified_time;
 use anki_io::read_file;
@@ -120,13 +119,8 @@ fn run() -> Result<()> {
         return Ok(());
     }
 
-    // Create install directory and copy project files in
+    // Create install directory
     create_dir_all(&state.uv_install_root)?;
-    copy_if_newer(&state.dist_pyproject_path, &state.user_pyproject_path)?;
-    copy_if_newer(
-        &state.dist_python_version_path,
-        &state.user_python_version_path,
-    )?;
 
     let launcher_requested = state.launcher_trigger_file.exists();
 
@@ -650,8 +644,17 @@ fn fetch_versions(state: &State) -> Result<Vec<String>> {
     let mut cmd = Command::new(&state.uv_path);
     cmd.current_dir(&state.uv_install_root)
         .args(["run", "--no-project", "--no-config", "--managed-python"])
-        .args(["--with", "pip-system-certs"])
-        .arg(&versions_script);
+        .args(["--with", "pip-system-certs"]);
+
+    let python_version = read_file(&state.dist_python_version_path)?;
+    let python_version_str =
+        String::from_utf8(python_version).context("Invalid UTF-8 in .python-version")?;
+    let version_trimmed = python_version_str.trim();
+    if !version_trimmed.is_empty() {
+        cmd.args(["--python", version_trimmed]);
+    }
+
+    cmd.arg(&versions_script);
 
     let output = match cmd.utf8_output() {
         Ok(output) => output,
