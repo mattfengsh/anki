@@ -42,17 +42,6 @@ use crate::timestamp::TimestampMillis;
 use crate::timestamp::TimestampSecs;
 use crate::types::Usn;
 
-#[derive(Debug, Clone, Default)]
-pub struct RetentionCosts {
-    pub average_pass_time_ms: f32,
-    pub average_fail_time_ms: f32,
-    pub average_learn_time_ms: f32,
-    pub initial_pass_rate: f32,
-    pub pass_count: u32,
-    pub fail_count: u32,
-    pub learn_count: u32,
-}
-
 impl FromSql for CardType {
     fn column_result(value: ValueRef<'_>) -> result::Result<Self, FromSqlError> {
         if let ValueRef::Integer(i) = value {
@@ -760,24 +749,6 @@ impl super::SqliteStorage {
             .get(0)?)
     }
 
-    pub(crate) fn get_costs_for_retention(&self) -> Result<RetentionCosts> {
-        let mut statement = self
-            .db
-            .prepare(include_str!("get_costs_for_retention.sql"))?;
-        let mut query = statement.query(params![])?;
-        let row = query.next()?.unwrap();
-
-        Ok(RetentionCosts {
-            average_pass_time_ms: row.get(0).unwrap_or(7000.),
-            average_fail_time_ms: row.get(1).unwrap_or(23_000.),
-            average_learn_time_ms: row.get(2).unwrap_or(30_000.),
-            initial_pass_rate: row.get(3).unwrap_or(0.5),
-            pass_count: row.get(4).unwrap_or(0),
-            fail_count: row.get(5).unwrap_or(0),
-            learn_count: row.get(6).unwrap_or(0),
-        })
-    }
-
     #[cfg(test)]
     pub(crate) fn get_all_cards(&self) -> Vec<Card> {
         self.db
@@ -838,6 +809,7 @@ impl fmt::Display for ReviewOrderSubclause {
             ReviewOrderSubclause::RetrievabilityFsrs { timing, order } => {
                 let today = timing.days_elapsed;
                 let next_day_at = timing.next_day_at.0;
+                let now = timing.now.0;
                 temp_string =
                     format!("ord, round(extract_fsrs_relative_retrievability(data, case when odue !=0 then odue else due end, {today}, ivl, {next_day_at})*100,0) {order}, extract_fsrs_variable(data, 'd') asc, due desc, ivl asc");
                 &temp_string
@@ -950,5 +922,3 @@ mod test {
         assert_ne!(id1, card.id);
     }
 }
-
-
