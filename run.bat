@@ -11,6 +11,8 @@ set ANKI_API_HOST=127.0.0.1
 set RUST_BACKTRACE=1
 set TRACESQL=1
 
+@if not defined PYENV set PYENV=out\pyenv
+  
 call tools\ninja pylib qt || exit /b 1
-.\out\pyenv\scripts\python tools\run.py %* || exit /b 1
+%PYENV%\Scripts\python tools\run.py %* || exit /b 1
 popd
