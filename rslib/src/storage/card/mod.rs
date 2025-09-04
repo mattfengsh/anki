@@ -839,7 +839,7 @@ impl fmt::Display for ReviewOrderSubclause {
                 let next_day_at = timing.next_day_at.0;
                 let now = timing.now.0;
                 temp_string =
-                    format!("cast(round(extract_fsrs_relative_retrievability(data, case when odue !=0 then odue else due end, {today}, ivl, {next_day_at}, {now})*100) AS INTEGER) {order}, ord, extract_fsrs_variable(data, 's') ascb");
+                    format!("cast(round(extract_fsrs_relative_retrievability(data, case when odue !=0 then odue else due end, {today}, ivl, {next_day_at}, {now})*100) AS INTEGER) {order}, ord, extract_fsrs_variable(data, 's') asc");
                 &temp_string
             }
             ReviewOrderSubclause::Added => "nid asc, ord asc",
