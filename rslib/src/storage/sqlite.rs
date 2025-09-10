@@ -348,7 +348,7 @@ fn add_extract_fsrs_retrievability(db: &Connection) -> rusqlite::Result<()> {
                     return Ok(None);
                 };
                 let review_day = due.saturating_sub(ivl);
-                days_elapsed.saturating_sub(review_day) as u32 * 86_400
+                (days_elapsed.saturating_sub(review_day)  * 86_400 ) as u32
             };
             let decay = card_data.decay.unwrap_or(FSRS5_DEFAULT_DECAY);
             let retrievability = card_data.memory_state().map(|state| {
