@@ -13,3 +13,5 @@ WHERE did IN (
     queue IN (1, 4)
     AND due <= ?
   )
+ORDER BY
+    ord
