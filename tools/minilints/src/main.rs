@@ -202,7 +202,7 @@ fn sveltekit_temp_file(path: &str) -> bool {
 }
 
 fn check_cargo_deny() -> Result<()> {
-    Command::run("cargo install cargo-deny@0.18.3")?;
+    Command::run("cargo install cargo-deny@0.18.6")?;
     Command::run("cargo deny check")?;
     Ok(())
 }
@@ -255,9 +255,7 @@ fn check_for_unstaged_changes() {
 }
 
 fn generate_licences() -> Result<String> {
-    if which::which("cargo-license").is_err() {
-        Command::run("cargo install cargo-license@0.7.0")?;
-    }
+    Command::run("cargo install cargo-license@0.7.0")?;
     let output = Command::run_with_output([
         "cargo-license",
         "--features",
