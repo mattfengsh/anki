@@ -21,3 +21,6 @@ ts/.svelte-kit
 .claude/settings.local.json
 /qt/out
 .claude/user.md
+.venv
+docs/_build/
+docs/autoapi/
