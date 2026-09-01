@@ -24,7 +24,7 @@ import { preloadResources } from "./preload";
 
 declare const MathJax: any;
 
-let mathjaxLoading: Promise<void> | null = window?.["MathJax"]?.startup?.promise ?? null;
+let mathjaxLoading: Promise<void> | null = null;
 
 function _lazyLoadMathJax(): Promise<void> {
     return mathjaxLoading || (mathjaxLoading = new Promise((resolve, reject) => {
