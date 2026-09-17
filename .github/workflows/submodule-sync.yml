@@ -12,18 +12,28 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          submodules: true
+          submodules: false # 关闭默认浅克隆，由后续脚本手动接管
           fetch-depth: 0
 
-      - name: Pull latest submodules
+      - name: Sync and update submodules
+        shell: bash
         run: |
-          git submodule update --init --recursive --remote --rebase
+          # 1. 注册并同步子模块路径配置
+          git submodule init
+          git submodule sync --recursive
+
+          # 2. 补全各子模块通配 fetch 规则并全量拉取分支 ref（解决找不到 origin/anki 问题）
+          git submodule foreach --recursive 'git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" && git fetch origin --tags --prune'
+
+          # 3. 安全更新并对齐到远程目标分支
+          git submodule update --recursive --remote --rebase
 
       - name: Commit and push changes
+        shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -31,4 +41,6 @@ jobs:
           if ! git diff-index --quiet HEAD; then
             git commit -m "chore: auto-sync submodules to latest upstream"
             git push
+          else
+            echo "No submodule updates detected. Working tree clean."
           fi
