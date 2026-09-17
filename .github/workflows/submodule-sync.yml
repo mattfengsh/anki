@@ -15,24 +15,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          submodules: false # 关闭默认浅克隆，由后续脚本手动接管
+          token: ${{ secrets.SUBMODULE_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+          submodules: false # 关闭默认克隆，避免浅克隆导致缺少 ref
           fetch-depth: 0
 
       - name: Sync and update submodules
         shell: bash
         run: |
+          set -e
+
           # 1. 注册并同步子模块路径配置
           git submodule init
           git submodule sync --recursive
 
-      # 2. 手动补全每个模块的 fetch 并获取远程分支
+          # 2. 依次克隆（不检出），并补充完整 fetch 规则拉取所有远程分支
           for path in ftl/core-repo ftl/qt-repo qt/installer/mac-template qt/installer/windows-template; do
+            echo "Processing submodule: $path"
             git submodule update --init --no-checkout "$path"
-            (cd "$path" && git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" && git fetch origin)
+            (
+              cd "$path"
+              git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+              git fetch origin --tags --prune
+            )
           done
 
-          # 3. 安全更新并对齐到远程目标分支
+          # 3. 各模块已具备 origin/anki 等分支引用，执行安全更新与对齐
           git submodule update --recursive --remote --rebase
 
       - name: Commit and push changes
