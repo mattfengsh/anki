@@ -22,25 +22,15 @@ jobs:
       - name: Sync and update submodules
         shell: bash
         run: |
-          set -e
+    set -e
 
-          # 1. 注册并同步子模块路径配置
+          # 1. 注册并同步子模块配置
           git submodule init
           git submodule sync --recursive
 
-          # 2. 依次克隆（不检出），并补充完整 fetch 规则拉取所有远程分支
-          for path in ftl/core-repo ftl/qt-repo qt/installer/mac-template qt/installer/windows-template; do
-            echo "Processing submodule: $path"
-            git submodule update --init --no-checkout "$path"
-            (
-              cd "$path"
-              git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-              git fetch origin --tags --prune
-            )
-          done
-
-          # 3. 各模块已具备 origin/anki 等分支引用，执行安全更新与对齐
-          git submodule update --recursive --remote --rebase
+          # 2. 全量拉取所有分支并更新
+          # --no-single-branch 确保克隆时拉取远程所有分支（包括 anki），避免找不到分支引用
+          git submodule update --init --recursive --remote --rebase --no-single-branch
 
       - name: Commit and push changes
         shell: bash
