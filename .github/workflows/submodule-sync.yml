@@ -22,7 +22,7 @@ jobs:
       - name: Sync and update submodules
         shell: bash
         run: |
-    set -e
+          set -e
 
           # 1. 注册并同步子模块配置
           git submodule init
