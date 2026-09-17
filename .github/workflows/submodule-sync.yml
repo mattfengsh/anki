@@ -26,8 +26,11 @@ jobs:
           git submodule init
           git submodule sync --recursive
 
-          # 2. 补全各子模块通配 fetch 规则并全量拉取分支 ref（解决找不到 origin/anki 问题）
-          git submodule foreach --recursive 'git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" && git fetch origin --tags --prune'
+      # 2. 手动补全每个模块的 fetch 并获取远程分支
+          for path in ftl/core-repo ftl/qt-repo qt/installer/mac-template qt/installer/windows-template; do
+            git submodule update --init --no-checkout "$path"
+            (cd "$path" && git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" && git fetch origin)
+          done
 
           # 3. 安全更新并对齐到远程目标分支
           git submodule update --recursive --remote --rebase
