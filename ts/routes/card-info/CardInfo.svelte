@@ -17,7 +17,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     export let showRevlog: boolean = true;
     export let showCurve: boolean = true;
 
-    $: fsrsEnabled = stats?.fsrsEnabled ?? false;
+    $: fsrsEnabled = stats?.memoryState != null;
     $: desiredRetention = stats?.desiredRetention ?? 0.9;
     $: decay = (() => {
         const paramsLength = stats?.fsrsParams?.length ?? 0;
