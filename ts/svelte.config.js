@@ -14,6 +14,9 @@ const config = {
     preprocess: [vitePreprocess(), preprocess()],
 
     kit: {
+        version: {
+            name: "anki",
+        },
         adapter: adapter(
             { pages: "../out/sveltekit", fallback: "index.html", precompress: false },
         ),
